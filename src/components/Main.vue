@@ -3,6 +3,7 @@ import { computed, onMounted, onUpdated, ref, watch, watchEffect } from "vue";
 import Count from "./Count.vue";
 import { Divisions, Nums } from "./types";
 import { useClicker } from "./composables/useClicker";
+import clickSound from "../assets/click.mp3";
 
 const selectedDivision = ref<number>(Divisions.eight);
 
@@ -72,6 +73,17 @@ watch(
 	}
 );
 
+watch(
+	() => count.value,
+	() => {
+		clickSoundRef.value.play();
+		setTimeout(() => {
+			clickSoundRef.value.pause();
+			clickSoundRef.value.currentTime = 0;
+		}, 100);
+	}
+);
+
 const clearClickBg = () => {
 	click.value.forEach((item: any) => {
 		item.classList.remove("active");
@@ -100,10 +112,13 @@ onUpdated(() => {
 		kicks.value = document.querySelectorAll("#kicks");
 	}
 });
+
+const clickSoundRef = ref();
 </script>
 
 <template>
 	<section class="w-[100vw] flex flex-col gap-4">
+		<audio :src="clickSound" ref="clickSoundRef"></audio>
 		<article class="flex gap-4 mx-auto">
 			<div class="flex flex-col max-w-[200px] text-left gap-2">
 				<label for="division">Select note division:</label>

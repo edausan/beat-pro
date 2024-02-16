@@ -1,19 +1,16 @@
-<script lang="ts">
-import { defineComponent } from "vue";
+<script lang="ts" setup>
 import Buttons from "./Buttons.vue";
 
-export default defineComponent({
-  name: "Notes",
-	components: { Buttons },
-  props: {
-    beat: {
-      required: false,
-      type: String,
-    },
-  }
-});
+defineProps<{
+	beat: string;
+	is16?: boolean;
+	isN?: boolean;
+}>();
 </script>
 
 <template>
-  <div><span class="text-sky-400">{{ beat }}</span> <Buttons /></div>
+	<div>
+		<span :class="[$props.isN ? 'text-orange-500' : 'text-sky-400']">{{ beat }}</span> <Buttons :is16="$props.is16" />
+	</div>
 </template>
+

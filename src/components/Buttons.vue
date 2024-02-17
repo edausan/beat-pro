@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, watchEffect } from "vue";
+import { computed, ref, watch } from "vue";
 import { ActiveKit, DrumKit } from "./types";
 import { useSequencer } from "../stores/useSequencer";
 import { storeToRefs } from "pinia";
@@ -42,7 +42,10 @@ watch(
 		if (isClear) {
 			for (const key in active.value) {
 				if (Object.prototype.hasOwnProperty.call(active.value, key)) {
-					active.value[key] = false;
+					// TODO: need to implement clear
+					const obj: { [key: string]: boolean } = { ...active.value };
+					console.log({ obj: obj[key] });
+					obj[key] = false;
 				}
 			}
 		}

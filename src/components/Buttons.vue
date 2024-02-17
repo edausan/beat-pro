@@ -40,14 +40,14 @@ watch(
 	() => isClear.value,
 	(isClear) => {
 		if (isClear) {
-			for (const key in active.value) {
-				if (Object.prototype.hasOwnProperty.call(active.value, key)) {
-					// TODO: need to implement clear
-					const obj: { [key: string]: boolean } = { ...active.value };
-					console.log({ obj: obj[key] });
-					obj[key] = false;
-				}
-			}
+			active.value.bell = false;
+			active.value.crash = false;
+			active.value.hats = false;
+			active.value.kick = false;
+			active.value.snare = false;
+			active.value.tomHi = false;
+			active.value.tomLo = false;
+			active.value.tomMid = false;
 		}
 	}
 );
@@ -87,10 +87,6 @@ const activeClass = (kit: string) => {
 };
 
 const onHold = ref(false);
-
-// watchEffect(() => {
-// 	console.log({ onHold: onHold.value });
-// });
 
 watch(
 	() => onHold.value,

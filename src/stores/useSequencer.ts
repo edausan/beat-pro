@@ -21,10 +21,10 @@ export const useSequencer = defineStore("sequencer", () => {
 	// const localVolumes = computed(() => JSON.parse(localStorage.getItem("volumes") as string));
 	const sequences = ref<DivisionItem[]>([]);
 
-	const persistToLocalStorage = () => {
-		// localStorage.setItem("volumes", JSON.stringify(volumes.value));
-		localStorage.setItem("sequences", JSON.stringify(sequences.value));
-	};
+	// const persistToLocalStorage = () => {
+	// 	// localStorage.setItem("volumes", JSON.stringify(volumes.value));
+	// 	localStorage.setItem("sequences", JSON.stringify(sequences.value));
+	// };
 
 	const updateSequence = (newSeq: DivisionItem[]) => {
 		sequences.value = [...sequences.value, ...newSeq];

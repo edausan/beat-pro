@@ -16,7 +16,7 @@ const kit = useKit();
 const { isShowAll } = storeToRefs(kit);
 
 const sequencer = useSequencer();
-const { isClear, volumes } = storeToRefs(sequencer);
+const { isClear } = storeToRefs(sequencer);
 
 const activekit = computed(() => props.beat.selected);
 
@@ -131,7 +131,7 @@ const isCount = computed(() => typeof props.beat.id === "number");
 				:kit="DrumKit.Crash"
 				:label="DrumKitNames.Crash.short"
 				@set-active="handleSetActive(DrumKit.Crash)"
-				@set-volume="(val) => chinaCymbal.volume(val)" />
+				@set-volume="(val: number) => chinaCymbal.volume(val)" />
 
 			<SequenceButton
 				:beat="$props.beat"
@@ -140,7 +140,7 @@ const isCount = computed(() => typeof props.beat.id === "number");
 				:kit="DrumKit.Bell"
 				:label="DrumKitNames.Bell.short"
 				@set-active="handleSetActive(DrumKit.Bell)"
-				@set-volume="(val) => rideSound.volume(val)" />
+				@set-volume="(val: number) => rideSound.volume(val)" />
 			<div class="mb-1"></div>
 		</template>
 
@@ -152,7 +152,7 @@ const isCount = computed(() => typeof props.beat.id === "number");
 				:kit="DrumKit.TomHi"
 				:label="DrumKitNames.TomHi.short"
 				@set-active="handleSetActive(DrumKit.TomHi)"
-				@set-volume="(val) => tomHiSound.volume(val)" />
+				@set-volume="(val: number) => tomHiSound.volume(val)" />
 
 			<SequenceButton
 				:beat="$props.beat"
@@ -161,7 +161,7 @@ const isCount = computed(() => typeof props.beat.id === "number");
 				:kit="DrumKit.TomMid"
 				:label="DrumKitNames.TomMid.short"
 				@set-active="handleSetActive(DrumKit.TomMid)"
-				@set-volume="(val) => tomMidSound.volume(val)" />
+				@set-volume="(val: number) => tomMidSound.volume(val)" />
 
 			<SequenceButton
 				:beat="$props.beat"
@@ -170,7 +170,7 @@ const isCount = computed(() => typeof props.beat.id === "number");
 				:kit="DrumKit.TomLo"
 				:label="DrumKitNames.TomLo.short"
 				@set-active="handleSetActive(DrumKit.TomLo)"
-				@set-volume="(val) => tomLoSound.volume(val)" />
+				@set-volume="(val: number) => tomLoSound.volume(val)" />
 
 			<div class="mb-1"></div>
 		</template>
@@ -183,7 +183,7 @@ const isCount = computed(() => typeof props.beat.id === "number");
 			label="H"
 			:icon="isHatsOpen ? HHOpen : HHClose"
 			@set-active="handleSetActive(DrumKit.Hats)"
-			@set-volume="(val) => hhCloseSound.volume(val)" />
+			@set-volume="(val: number) => hhCloseSound.volume(val)" />
 
 		<SequenceButton
 			:beat="$props.beat"
@@ -193,7 +193,7 @@ const isCount = computed(() => typeof props.beat.id === "number");
 			label="S"
 			:icon="Snare"
 			@set-active="handleSetActive(DrumKit.Snare)"
-			@set-volume="(val) => snareSound.volume(val)" />
+			@set-volume="(val: number) => snareSound.volume(val)" />
 
 		<SequenceButton
 			:beat="$props.beat"
@@ -203,7 +203,7 @@ const isCount = computed(() => typeof props.beat.id === "number");
 			:label="DrumKitNames.Kick.short"
 			:icon="Kick"
 			@set-active="handleSetActive(DrumKit.Kick)"
-			@set-volume="(val) => kickSound.volume(val)" />
+			@set-volume="(val: number) => kickSound.volume(val)" />
 	</div>
 </template>
 

@@ -1,4 +1,4 @@
-import { ComputedRef, Ref, computed, watch } from "vue";
+import { ComputedRef, Ref, watch } from "vue";
 import { useSequencer } from "../../stores/useSequencer";
 import { storeToRefs } from "pinia";
 import { Howl } from "howler";

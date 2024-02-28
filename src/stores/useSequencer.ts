@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { computed, ref, watch, watchEffect } from "vue";
+import { ref } from "vue";
 import { DivisionItem } from "../components/types";
 
 export const useSequencer = defineStore("sequencer", () => {

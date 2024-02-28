@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
-import { ActiveKit, DrumKit } from "./types";
+import { computed, ref, toRefs, watch } from "vue";
+import { ActiveKit, DivisionItem, DrumKit, DrumKitNames } from "./types";
 import { useSequencer } from "../stores/useSequencer";
 import { storeToRefs } from "pinia";
 import { useKit } from "../stores/useKit";
@@ -8,31 +8,82 @@ import HHClose from "../assets/hh-close.png";
 import HHOpen from "../assets/hh-open.png";
 import Snare from "../assets/snare.png";
 import Kick from "../assets/kick.png";
+import { useDrumsSound } from "./composables/useDrumsSound";
+import SequenceButton from "./common/SequenceButton.vue";
 
-const props = defineProps<{ is16?: boolean; isActive?: boolean }>();
+const props = defineProps<{ is16?: boolean; isActive?: boolean; idx: number; beat: DivisionItem }>();
 const kit = useKit();
 const { isShowAll } = storeToRefs(kit);
 
 const sequencer = useSequencer();
-const { isClear } = storeToRefs(sequencer);
+const { isClear, volumes } = storeToRefs(sequencer);
+
+const activekit = computed(() => props.beat.selected);
 
 const active = ref<ActiveKit>({
-	hats: false,
-	snare: false,
-	kick: false,
-	tomHi: false,
-	tomMid: false,
-	tomLo: false,
-	crash: false,
-	bell: false,
+	hats: activekit.value.hats.isSelected,
+	snare: activekit.value.snare.isSelected,
+	kick: activekit.value.kick.isSelected,
+	tomHi: activekit.value.tomHi.isSelected,
+	tomMid: activekit.value.tomLo.isSelected,
+	tomLo: activekit.value.tomLo.isSelected,
+	crash: activekit.value.crash.isSelected,
+	bell: activekit.value.bell.isSelected,
 });
 
 const isHatsOpen = ref(false);
+
+const isActiveButtons = computed(() => props.isActive);
+
+const drumSounds = useDrumsSound({
+	active,
+	isActive: isActiveButtons,
+	isHatsOpen,
+});
+
+const { kickSound, snareSound, hhCloseSound, chinaCymbal, rideSound, tomHiSound, tomLoSound, tomMidSound } = toRefs(drumSounds);
 
 watch(
 	() => active.value,
 	() => {
 		sequencer.setIsClear(false);
+		sequencer.updateSequenceItem({
+			id: props.beat.id,
+			selected: {
+				hats: {
+					isSelected: active.value.hats,
+					// volume: volumes.value.hats,
+				},
+				snare: {
+					isSelected: active.value.snare,
+					// volume: volumes.value.snare,
+				},
+				kick: {
+					isSelected: active.value.kick,
+					// volume: volumes.value.kick,
+				},
+				tomHi: {
+					isSelected: active.value.tomHi,
+					// volume: volumes.value.tomHi,
+				},
+				tomMid: {
+					isSelected: active.value.tomMid,
+					// volume: volumes.value.tomMid,
+				},
+				tomLo: {
+					isSelected: active.value.tomLo,
+					// volume: volumes.value.tomLo,
+				},
+				crash: {
+					isSelected: active.value.crash,
+					// volume: volumes.value.crash,
+				},
+				bell: {
+					isSelected: active.value.bell,
+					// volume: volumes.value.bell,
+				},
+			},
+		});
 	}
 );
 
@@ -54,38 +105,6 @@ watch(
 
 const handleSetActive = (drum: string) => (active.value = { ...active.value, [drum]: !(active.value as any)[drum] });
 
-const activeClass = (kit: string) => {
-	const activeKit = computed(() => {
-		switch (kit) {
-			case DrumKit.Hats:
-				return active.value.hats;
-			case DrumKit.Snare:
-				return active.value.snare;
-			case DrumKit.Kick:
-				return active.value.kick;
-			case DrumKit.TomHi:
-				return active.value.tomHi;
-			case DrumKit.TomMid:
-				return active.value.tomMid;
-			case DrumKit.TomLo:
-				return active.value.tomLo;
-			case DrumKit.Crash:
-				return active.value.crash;
-			case DrumKit.Bell:
-				return active.value.bell;
-
-			default:
-				return active.value.hats;
-		}
-	});
-
-	return activeKit.value && props.isActive
-		? "bg-green-600 !opacity-100"
-		: activeKit.value && !props.isActive
-		? "bg-sky-600 !opacity-100"
-		: "";
-};
-
 const onHold = ref(false);
 
 watch(
@@ -98,58 +117,104 @@ watch(
 		}, 500);
 	}
 );
+
+const isCount = computed(() => typeof props.beat.id === "number");
 </script>
 
 <template>
-	<div class="flex flex-col gap-2 mt-2">
+	<div :class="['flex flex-col gap-2 mt-2 py-2', isCount && 'p-2 bg-zinc-900/30 rounded-md']">
 		<template v-if="isShowAll">
-			<button :id="DrumKit.Crash" :class="[activeClass(DrumKit.Crash), 'btn opacity-50']" @click="handleSetActive(DrumKit.Crash)">
-				C
-			</button>
-			<button :id="DrumKit.Bell" :class="[activeClass(DrumKit.Bell), 'btn opacity-50']" @click="handleSetActive(DrumKit.Bell)">
-				B
-			</button>
+			<SequenceButton
+				:beat="$props.beat"
+				:active="active"
+				:is-active="(isActive as boolean)"
+				:kit="DrumKit.Crash"
+				:label="DrumKitNames.Crash.short"
+				@set-active="handleSetActive(DrumKit.Crash)"
+				@set-volume="(val) => chinaCymbal.volume(val)" />
+
+			<SequenceButton
+				:beat="$props.beat"
+				:active="active"
+				:is-active="(isActive as boolean)"
+				:kit="DrumKit.Bell"
+				:label="DrumKitNames.Bell.short"
+				@set-active="handleSetActive(DrumKit.Bell)"
+				@set-volume="(val) => rideSound.volume(val)" />
 			<div class="mb-1"></div>
 		</template>
 
 		<template v-if="isShowAll">
-			<button :id="DrumKit.TomHi" :class="[activeClass(DrumKit.TomHi), 'btn opacity-50']" @click="handleSetActive(DrumKit.TomHi)">
-				T
-			</button>
-			<button
-				:id="DrumKit.TomMid"
-				:class="[activeClass(DrumKit.TomMid), 'btn opacity-50']"
-				@click="handleSetActive(DrumKit.TomMid)">
-				M
-			</button>
-			<button :id="DrumKit.TomLo" :class="[activeClass(DrumKit.TomLo), 'btn opacity-50']" @click="handleSetActive(DrumKit.TomLo)">
-				L
-			</button>
+			<SequenceButton
+				:beat="$props.beat"
+				:active="active"
+				:is-active="(isActive as boolean)"
+				:kit="DrumKit.TomHi"
+				:label="DrumKitNames.TomHi.short"
+				@set-active="handleSetActive(DrumKit.TomHi)"
+				@set-volume="(val) => tomHiSound.volume(val)" />
+
+			<SequenceButton
+				:beat="$props.beat"
+				:active="active"
+				:is-active="(isActive as boolean)"
+				:kit="DrumKit.TomMid"
+				:label="DrumKitNames.TomMid.short"
+				@set-active="handleSetActive(DrumKit.TomMid)"
+				@set-volume="(val) => tomMidSound.volume(val)" />
+
+			<SequenceButton
+				:beat="$props.beat"
+				:active="active"
+				:is-active="(isActive as boolean)"
+				:kit="DrumKit.TomLo"
+				:label="DrumKitNames.TomLo.short"
+				@set-active="handleSetActive(DrumKit.TomLo)"
+				@set-volume="(val) => tomLoSound.volume(val)" />
+
 			<div class="mb-1"></div>
 		</template>
 
-		<button
-			@mousedown="onHold = true"
-			@mouseup="onHold = false"
-			:id="DrumKit.Hats"
-			:class="[activeClass(DrumKit.Hats), 'btn opacity-50']"
-			@click="handleSetActive(DrumKit.Hats)">
-			<!-- {{ isHatsOpen ? "O" : "H" }} -->
-			<img class="h-[30px] invert" :src="isHatsOpen ? HHOpen : HHClose" alt="" />
-		</button>
-		<button :id="DrumKit.Snare" :class="[activeClass(DrumKit.Snare), 'btn opacity-50']" @click="handleSetActive(DrumKit.Snare)">
-			<img class="h-[30px] invert" :src="Snare" alt="" />
-		</button>
-		<button :id="DrumKit.Kick" :class="[activeClass(DrumKit.Kick), 'btn opacity-50']" @click="handleSetActive(DrumKit.Kick)">
-			<img class="h-[30px] invert" :src="Kick" alt="" />
-		</button>
+		<SequenceButton
+			:beat="$props.beat"
+			:active="active"
+			:is-active="(isActive as boolean)"
+			:kit="DrumKit.Hats"
+			label="H"
+			:icon="isHatsOpen ? HHOpen : HHClose"
+			@set-active="handleSetActive(DrumKit.Hats)"
+			@set-volume="(val) => hhCloseSound.volume(val)" />
+
+		<SequenceButton
+			:beat="$props.beat"
+			:active="active"
+			:is-active="(isActive as boolean)"
+			:kit="DrumKit.Snare"
+			label="S"
+			:icon="Snare"
+			@set-active="handleSetActive(DrumKit.Snare)"
+			@set-volume="(val) => snareSound.volume(val)" />
+
+		<SequenceButton
+			:beat="$props.beat"
+			:active="active"
+			:is-active="(isActive as boolean)"
+			:kit="DrumKit.Kick"
+			:label="DrumKitNames.Kick.short"
+			:icon="Kick"
+			@set-active="handleSetActive(DrumKit.Kick)"
+			@set-volume="(val) => kickSound.volume(val)" />
 	</div>
 </template>
 
 <style scoped>
-/* .btn {
-	opacity: 0.7;
-} */
+.btn {
+	height: 56px;
+	width: 56px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
 .btn:hover {
 	border-color: #0ea5e9;
 }

@@ -1,35 +1,49 @@
 <script lang="ts" setup>
 import { computed, ref, watch, watchEffect } from "vue";
 import { Divisions, DivisionValues } from "./types";
-import clickSound from "../assets/click.mp3";
 import { useNotesPerBeat } from "./composables/useNotesPerBeat";
 import Notes from "./Notes.vue";
 import { useSequencer } from "../stores/useSequencer";
 import { useKit } from "../stores/useKit";
 import { storeToRefs } from "pinia";
+import MetronomeIcon from "../assets/metronome-icon.svg";
 
 const sequencer = useSequencer();
-
 const kit = useKit();
-const { isClear } = storeToRefs(sequencer);
+const { isClear, isMetronomeOn, sequences } = storeToRefs(sequencer);
 const { isShowAll } = storeToRefs(kit);
 
 const selectedDivision = ref<number>(Divisions.eight);
-
-const sequences = computed(() => {
-	if (selectedDivision.value === Divisions.quarter) {
-		return DivisionValues.quarter;
-	} else if (selectedDivision.value === Divisions.eight) {
-		return DivisionValues.eight;
-	}
-
-	return DivisionValues.sixteen;
-});
-
 const count = ref(0);
 const isPlaying = ref(false);
 const interval = ref();
-const bpm = ref(80);
+const bpm = ref(120);
+
+const initialSequences = computed(() => {
+	switch (selectedDivision.value) {
+		case Divisions.quarter:
+			return DivisionValues.quarter;
+		case Divisions.eight:
+			return DivisionValues.eight;
+		case Divisions.sixteen:
+			return DivisionValues.sixteen;
+		// case Divisions.quarterTriplet:
+		// 	return DivisionValues.quarterTriplet;
+		case Divisions.eightTriplet:
+			return DivisionValues.eightTriplet;
+		case Divisions.sixteenTriplet:
+			return DivisionValues.sixteenTriplet;
+
+		default:
+			return DivisionValues.quarter;
+	}
+});
+
+const sequenceLength = computed(() => sequences.value.length);
+
+watchEffect(() => {
+	sequencer.setSequence(initialSequences.value);
+});
 
 const { notesPerBeat } = useNotesPerBeat({ selectedDivision });
 
@@ -47,7 +61,7 @@ watch(
 		if (isPlaying) {
 			interval.value = setInterval(() => {
 				// check of count is equal to divisions
-				if (count.value === selectedDivision.value) {
+				if (count.value === sequenceLength.value) {
 					return (count.value = 1);
 				}
 
@@ -55,21 +69,17 @@ watch(
 			}, 1000 / notesPerSecond.value);
 		} else {
 			clearInterval(interval.value);
-			clickSoundRef.value.pause();
 		}
 	}
 );
 
-watch(
-	() => count.value,
-	() => {
-		clickSoundRef.value.play();
-		setTimeout(() => {
-			clickSoundRef.value.pause();
-			clickSoundRef.value.currentTime = 0;
-		}, 100);
-	}
-);
+watchEffect(() => {
+	document.addEventListener("keydown", (e) => {
+		if (e.code === "Space") {
+			isPlaying.value = !isPlaying.value;
+		}
+	});
+});
 
 const reset = () => {
 	clearInterval(interval.value);
@@ -87,12 +97,51 @@ const handleStop = () => {
 	reset();
 };
 
-const clickSoundRef = ref();
+// const handleAddBar = () => {
+// 	const seqLength = sequences.value.length;
+// 	switch (selectedDivision.value) {
+// 		case Divisions.quarter:
+// 			return sequencer.updateSequence([
+// 				{
+// 					id: seqLength + 1,
+// 					selected,
+// 				},
+// 			]);
+
+// 		case Divisions.eight:
+// 			return sequencer.updateSequence([
+// 				{
+// 					id: seqLength / 2 + 1,
+// 					selected,
+// 				},
+// 				nCount,
+// 			]);
+
+// 		case Divisions.sixteen:
+// 			sequencer.updateSequence([
+// 				{
+// 					id: seqLength / 4 + 1,
+// 					selected,
+// 				},
+// 				eCount,
+// 				nCount,
+// 				aCount,
+// 			]);
+// 			break;
+
+// 		default:
+// 			return sequencer.updateSequence([
+// 				{
+// 					id: seqLength + 1,
+// 					selected,
+// 				},
+// 			]);
+// 	}
+// };
 </script>
 
 <template>
-	<section class="w-[100vw] flex flex-col gap-4">
-		<audio :src="clickSound" ref="clickSoundRef"></audio>
+	<section class="w-full flex flex-col gap-4">
 		<article class="flex gap-4 mx-auto">
 			<div class="flex flex-col max-w-[200px] text-left gap-2">
 				<select
@@ -101,8 +150,11 @@ const clickSoundRef = ref();
 					id="division"
 					class="py-3 px-4 bg-[#1a1a1a] rounded-md transition-all cursor-pointer border border-transparent hover:border-[#646cff]">
 					<option :value="Divisions.quarter">Quarter</option>
+					<!-- <option :value="Divisions.quarterTriplet">Quarter Triplet</option> -->
 					<option :value="Divisions.eight">Eight</option>
+					<option :value="Divisions.eightTriplet">Eight Triplet</option>
 					<option :value="Divisions.sixteen">Sixteen</option>
+					<option :value="Divisions.sixteenTriplet">Sixteen Triplet</option>
 				</select>
 			</div>
 
@@ -136,21 +188,37 @@ const clickSoundRef = ref();
 			</div>
 
 			<div class="flex items-end">
-				<button @click="kit.toggleShowAll">{{ isShowAll ? "Hide other" : "Show all" }}</button>
+				<button @click="kit.toggleShowAll">{{ isShowAll ? "Hide other" : "Show Full kit" }}</button>
+			</div>
+
+			<div class="flex items-end">
+				<button
+					@click="sequencer.toggleMetronome"
+					:class="['min-h-[38px] border hover:border-indigo-500', isMetronomeOn ? 'bg-indigo-500' : '']">
+					<img :src="MetronomeIcon" class="h-[18px] invert" alt="" />
+				</button>
 			</div>
 		</article>
 
-		<div class="flex flex-row mx-auto text-center">
-			<Notes
-				v-for="(sequence, index) in sequences"
-				:key="index"
-				:idx="index"
-				:beat="sequence"
-				:count="count"
-				:is-active="index === count - 1" />
+		<div class="flex gap-4 mx-auto">
+			<div class="flex flex-row max-w-[1280px] text-center overflow-auto">
+				<Notes
+					v-for="(sequence, index) in sequences"
+					:key="index"
+					:idx="index"
+					:beat="sequence"
+					:count="count"
+					:is-active="index === count - 1" />
+			</div>
+
+			<!-- <button @click="handleAddBar" class="btn">+ Add bar</button> -->
 		</div>
 	</section>
 </template>
 
-<style scoped></style>
+<style scoped>
+.btn:hover {
+	border-color: #0ea5e9;
+}
+</style>
 

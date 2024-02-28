@@ -1,17 +1,16 @@
 <script lang="ts">
-import { defineComponent } from 'vue';
-import MainWrapper from './components/Main.vue';
+import { defineComponent } from "vue";
+import MainWrapper from "./components/Main.vue";
 
 export default defineComponent({
-    name: "App",
-    components: { MainWrapper }
-})
+	name: "App",
+	components: { MainWrapper },
+});
 </script>
 
 <template>
-    <MainWrapper />
+	<MainWrapper />
 </template>
 
-<style scoped>
+<style scoped></style>
 
-</style>
